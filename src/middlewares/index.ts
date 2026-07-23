@@ -1,0 +1,20 @@
+import type { NextFunction, Request, Response } from "express";
+
+import { env } from "../config/env.js";
+import type ErrorResponse from "../interfaces/error-response.js";
+
+export function notFound(req: Request, res: Response, next: NextFunction) {
+  res.status(404);
+  const error = new Error(`🔍 - Not Found - ${req.originalUrl}`);
+  next(error);
+}
+
+export function errorHandler(err: Error & { validation?: { field: string; message: string }[] }, req: Request, res: Response<ErrorResponse & { validation?: { field: string; message: string }[] }>, _next: NextFunction) {
+  const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+  res.status(statusCode);
+  res.json({
+    message: err.message,
+    ...(err.validation ? { validation: err.validation } : {}),
+    stack: env.NODE_ENV === "production" ? "🥞" : err.stack,
+  });
+}
