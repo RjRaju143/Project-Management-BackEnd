@@ -11,6 +11,7 @@ import * as middlewares from "./middlewares";
 
 const app = express();
 
+app.set("trust proxy", 1);
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(cors({
@@ -33,7 +34,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: env.NODE_ENV === "production" ? "strict" : "lax",
+    sameSite: env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   },
 }));
