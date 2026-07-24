@@ -5,6 +5,7 @@ import Invite, { generateInviteToken } from "../models/invite.js";
 import type { UserType } from "../models/user.js";
 import User from "../models/user.js";
 import { env } from "../config/env.js";
+import { isSmtpConfigured, sendInviteEmail } from "./mail-service.js";
 
 const SALT_ROUNDS = 12;
 const INVITE_EXPIRY_DAYS = 7;
@@ -128,14 +129,32 @@ export async function inviteUser(input: InviteUserInput, invitedById: string) {
     expiresAt,
   });
 
-  // Build invite link — since no SMTP, log to console
+  // Build invite link
   const frontendUrl = env.FRONTEND_URL;
   const inviteLink = `${frontendUrl}/register/${token}`;
 
+  // Send invite email if SMTP is configured
+  if (isSmtpConfigured()) {
+    try {
+      await sendInviteEmail({
+        to: email.toLowerCase(),
+        firstName: firstName.trim(),
+        inviteLink,
+      });
+      // eslint-disable-next-line no-console
+      console.log(`📧 Invite email sent to: ${email}`);
+    }
+    catch (emailErr) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to send invite email:", emailErr);
+    }
+  }
+
+  // Always log to console as fallback
   // eslint-disable-next-line no-console
   console.log("\n" + "=".repeat(60));
   // eslint-disable-next-line no-console
-  console.log("📧 INVITE LINK (no SMTP configured — share manually)");
+  console.log("📧 INVITE LINK (share manually if email not received)");
   // eslint-disable-next-line no-console
   console.log("=".repeat(60));
   // eslint-disable-next-line no-console

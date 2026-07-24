@@ -6,6 +6,13 @@ const envSchema = z.object({
   MONGODB_URI: z.string().url().default("mongodb://localhost:27017/freelancer-crm"),
   SESSION_SECRET: z.string().min(32).default("change_this_session_secret_in_production_min32"),
   FRONTEND_URL: z.string().default("http://localhost:5173"),
+
+  // SMTP config
+  SMTP_HOST: z.string().default(""),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string().default(""),
+  SMTP_PASS: z.string().default(""),
+  SMTP_FROM: z.string().default("FreelancerCRM <noreply@freelancercrm.com>"),
 });
 
 try {
