@@ -12,7 +12,10 @@
   },
   "include": [
     "./*.js",
-    "src/**/*.ts",
-    "test/**/*.ts"
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "test",
+    "node_modules"
   ]
 }
