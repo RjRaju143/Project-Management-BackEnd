@@ -33,10 +33,10 @@ export async function createLead(input: CreateLeadInput, userId: string) {
   return lead.populate("user", "firstName lastName username");
 }
 
-export async function getLeads(query: LeadListQuery, userId: string) {
+export async function getLeads(query: LeadListQuery) {
   const { page = 1, limit = 20, search, status } = query;
 
-  const filter: Record<string, unknown> = { user: userId };
+  const filter: Record<string, unknown> = {};
 
   if (status) {
     filter.status = status;
@@ -71,8 +71,8 @@ export async function getLeads(query: LeadListQuery, userId: string) {
   };
 }
 
-export async function getLeadById(id: string, userId: string) {
-  const lead = await Lead.findOne({ _id: id, user: userId }).populate("user", "firstName lastName username");
+export async function getLeadById(id: string) {
+  const lead = await Lead.findById(id).populate("user", "firstName lastName username");
   if (!lead) {
     const err = new Error("Lead not found");
     (err as NodeJS.ErrnoException).code = "NOT_FOUND";
@@ -81,9 +81,8 @@ export async function getLeadById(id: string, userId: string) {
   return lead;
 }
 
-export async function updateLead(id: string, input: UpdateLeadInput, userId: string) {
-  // Check if lead is locked (status = Completed)
-  const existing = await Lead.findOne({ _id: id, user: userId });
+export async function updateLead(id: string, input: UpdateLeadInput) {
+  const existing = await Lead.findById(id);
   if (!existing) {
     const err = new Error("Lead not found");
     (err as NodeJS.ErrnoException).code = "NOT_FOUND";
@@ -105,8 +104,8 @@ export async function updateLead(id: string, input: UpdateLeadInput, userId: str
     input.completedAt = new Date().toISOString();
   }
 
-  const lead = await Lead.findOneAndUpdate(
-    { _id: id, user: userId },
+  const lead = await Lead.findByIdAndUpdate(
+    id,
     { $set: input },
     { new: true, runValidators: true },
   ).populate("user", "firstName lastName username");
@@ -119,8 +118,8 @@ export async function updateLead(id: string, input: UpdateLeadInput, userId: str
   return lead;
 }
 
-export async function deleteLead(id: string, userId: string) {
-  const lead = await Lead.findOneAndDelete({ _id: id, user: userId });
+export async function deleteLead(id: string) {
+  const lead = await Lead.findByIdAndDelete(id);
   if (!lead) {
     const err = new Error("Lead not found");
     (err as NodeJS.ErrnoException).code = "NOT_FOUND";

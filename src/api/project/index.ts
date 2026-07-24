@@ -14,7 +14,7 @@ router.use(authenticate);
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const query = leadListQuerySchema.parse(req.query);
-    const result = await projectService.getLeads(query, req.requester!.id);
+    const result = await projectService.getLeads(query);
     res.status(200).json(result);
   }
   catch (err) {
@@ -31,7 +31,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
 // GET /api/v1/projects/:id
 router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const lead = await projectService.getLeadById(String(req.params.id), req.requester!.id);
+    const lead = await projectService.getLeadById(String(req.params.id));
     res.status(200).json({ lead });
   }
   catch (err) {
@@ -44,7 +44,7 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
 router.patch("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = updateLeadSchema.parse(req.body);
-    const lead = await projectService.updateLead(String(req.params.id), validated, req.requester!.id);
+    const lead = await projectService.updateLead(String(req.params.id), validated);
     res.status(200).json({ message: "Project updated", lead });
   }
   catch (err) {
@@ -65,7 +65,7 @@ router.patch("/:id", async (req: Request, res: Response, next: NextFunction) => 
 // DELETE /api/v1/projects/:id
 router.delete("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await projectService.deleteLead(String(req.params.id), req.requester!.id);
+    await projectService.deleteLead(String(req.params.id));
     res.status(200).json({ message: "Project deleted" });
   }
   catch (err) {

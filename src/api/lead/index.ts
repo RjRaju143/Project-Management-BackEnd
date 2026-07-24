@@ -15,7 +15,7 @@ router.use(authenticate);
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const query = clientListQuerySchema.parse(req.query);
-    const result = await leadService.getClients(query, req.requester!.id);
+    const result = await leadService.getClients(query);
     res.status(200).json(result);
   }
   catch (err) {
@@ -50,7 +50,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 // GET /api/v1/leads/:id
 router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const client = await leadService.getClientById(String(req.params.id), req.requester!.id);
+    const client = await leadService.getClientById(String(req.params.id));
     res.status(200).json({ client });
   }
   catch (err) {
@@ -63,7 +63,7 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
 router.patch("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = updateClientSchema.parse(req.body);
-    const client = await leadService.updateClient(String(req.params.id), validated, req.requester!.id);
+    const client = await leadService.updateClient(String(req.params.id), validated);
     res.status(200).json({ message: "Lead updated", client });
   }
   catch (err) {
@@ -83,7 +83,7 @@ router.patch("/:id", async (req: Request, res: Response, next: NextFunction) => 
 // DELETE /api/v1/leads/:id
 router.delete("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await leadService.deleteClient(String(req.params.id), req.requester!.id);
+    await leadService.deleteClient(String(req.params.id));
     res.status(200).json({ message: "Lead deleted" });
   }
   catch (err) {
@@ -95,7 +95,7 @@ router.delete("/:id", async (req: Request, res: Response, next: NextFunction) =>
 // POST /api/v1/leads/:id/followup — creates a project from lead data
 router.post("/:id/followup", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const client = await leadService.getClientById(String(req.params.id), req.requester!.id);
+    const client = await leadService.getClientById(String(req.params.id));
 
     if (client.followedUp) {
       res.status(409);
@@ -120,7 +120,7 @@ router.post("/:id/followup", async (req: Request, res: Response, next: NextFunct
       req.requester!.id,
     );
 
-    await leadService.updateClient(String(req.params.id), { followedUp: true }, req.requester!.id);
+    await leadService.updateClient(String(req.params.id), { followedUp: true });
 
     res.status(201).json({ message: "Project created from lead", lead: project });
   }

@@ -30,10 +30,10 @@ export async function createClient(input: CreateClientInput, userId: string) {
   return client.populate("user", "firstName lastName username");
 }
 
-export async function getClients(query: ClientListQuery, userId: string) {
+export async function getClients(query: ClientListQuery) {
   const { page = 1, limit = 20, search, status } = query;
 
-  const filter: Record<string, unknown> = { user: userId };
+  const filter: Record<string, unknown> = {};
 
   if (status) {
     filter.status = status;
@@ -68,8 +68,8 @@ export async function getClients(query: ClientListQuery, userId: string) {
   };
 }
 
-export async function getClientById(id: string, userId: string) {
-  const client = await Client.findOne({ _id: id, user: userId }).populate("user", "firstName lastName username");
+export async function getClientById(id: string) {
+  const client = await Client.findById(id).populate("user", "firstName lastName username");
   if (!client) {
     const err = new Error("Client not found");
     (err as NodeJS.ErrnoException).code = "NOT_FOUND";
@@ -78,9 +78,8 @@ export async function getClientById(id: string, userId: string) {
   return client;
 }
 
-export async function updateClient(id: string, input: UpdateClientInput, userId: string) {
-  // Check if client is locked (status = Started)
-  const existing = await Client.findOne({ _id: id, user: userId });
+export async function updateClient(id: string, input: UpdateClientInput) {
+  const existing = await Client.findById(id);
   if (!existing) {
     const err = new Error("Client not found");
     (err as NodeJS.ErrnoException).code = "NOT_FOUND";
@@ -92,8 +91,8 @@ export async function updateClient(id: string, input: UpdateClientInput, userId:
     throw err;
   }
 
-  const client = await Client.findOneAndUpdate(
-    { _id: id, user: userId },
+  const client = await Client.findByIdAndUpdate(
+    id,
     { $set: input },
     { new: true, runValidators: true },
   ).populate("user", "firstName lastName username");
@@ -106,8 +105,8 @@ export async function updateClient(id: string, input: UpdateClientInput, userId:
   return client;
 }
 
-export async function deleteClient(id: string, userId: string) {
-  const client = await Client.findOneAndDelete({ _id: id, user: userId });
+export async function deleteClient(id: string) {
+  const client = await Client.findByIdAndDelete(id);
   if (!client) {
     const err = new Error("Client not found");
     (err as NodeJS.ErrnoException).code = "NOT_FOUND";
