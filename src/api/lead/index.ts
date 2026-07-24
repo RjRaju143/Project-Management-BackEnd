@@ -3,6 +3,7 @@ import express from "express";
 import { z } from "zod/v4";
 
 import { authenticate } from "../../middlewares/auth.js";
+import { logActivity } from "../../services/activity-service.js";
 import * as leadService from "../../services/client-service.js";
 import * as projectService from "../../services/lead-service.js";
 import { clientListQuerySchema, createClientSchema, updateClientSchema } from "../../validation/client.js";
@@ -34,6 +35,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = createClientSchema.parse(req.body);
     const client = await leadService.createClient(validated, req.requester!.id);
+    await logActivity({ userId: req.requester!.id, action: "created", entity: "lead", entityId: (client._id as { toString: () => string }).toString(), entityName: client.organizationName || client.clientName });
     res.status(201).json({ message: "Lead created", client });
   }
   catch (err) {
@@ -64,6 +66,7 @@ router.patch("/:id", async (req: Request, res: Response, next: NextFunction) => 
   try {
     const validated = updateClientSchema.parse(req.body);
     const client = await leadService.updateClient(String(req.params.id), validated);
+    await logActivity({ userId: req.requester!.id, action: "updated", entity: "lead", entityId: String(req.params.id), entityName: client.organizationName || client.clientName, changes: validated });
     res.status(200).json({ message: "Lead updated", client });
   }
   catch (err) {
@@ -83,7 +86,9 @@ router.patch("/:id", async (req: Request, res: Response, next: NextFunction) => 
 // DELETE /api/v1/leads/:id
 router.delete("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const client = await leadService.getClientById(String(req.params.id));
     await leadService.deleteClient(String(req.params.id));
+    await logActivity({ userId: req.requester!.id, action: "deleted", entity: "lead", entityId: String(req.params.id), entityName: client.organizationName || client.clientName });
     res.status(200).json({ message: "Lead deleted" });
   }
   catch (err) {
@@ -121,6 +126,7 @@ router.post("/:id/followup", async (req: Request, res: Response, next: NextFunct
     );
 
     await leadService.updateClient(String(req.params.id), { followedUp: true });
+    await logActivity({ userId: req.requester!.id, action: "followed_up", entity: "lead", entityId: String(req.params.id), entityName: client.organizationName || client.clientName });
 
     res.status(201).json({ message: "Project created from lead", lead: project });
   }

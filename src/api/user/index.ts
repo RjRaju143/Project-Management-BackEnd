@@ -3,6 +3,7 @@ import express from "express";
 import { z } from "zod/v4";
 
 import { authenticate } from "../../middlewares/auth.js";
+import * as activityService from "../../services/activity-service.js";
 import * as userService from "../../services/user-service.js";
 import { inviteUserSchema, loginSchema, registerSchema } from "../../validation/user.js";
 
@@ -178,6 +179,30 @@ router.post("/register", async (req: Request, res: Response, next: NextFunction)
     if (code === "DUPLICATE_EMAIL" || code === "DUPLICATE_USERNAME") {
       res.status(409);
     }
+    next(err);
+  }
+});
+
+// GET /api/v1/user/activities (protected, admin only)
+router.get("/activities", authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.requester!.userType !== "admin") {
+      res.status(403);
+      next(new Error("Only admins can view activity logs"));
+      return;
+    }
+
+    const query = {
+      page: req.query.page ? Number(req.query.page) : 1,
+      limit: req.query.limit ? Number(req.query.limit) : 30,
+      entity: req.query.entity ? String(req.query.entity) : undefined,
+      action: req.query.action ? String(req.query.action) : undefined,
+    };
+
+    const result = await activityService.getActivities(query);
+    res.status(200).json(result);
+  }
+  catch (err) {
     next(err);
   }
 });

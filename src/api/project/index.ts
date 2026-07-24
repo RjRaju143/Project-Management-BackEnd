@@ -3,6 +3,7 @@ import express from "express";
 import { z } from "zod/v4";
 
 import { authenticate } from "../../middlewares/auth.js";
+import { logActivity } from "../../services/activity-service.js";
 import * as projectService from "../../services/lead-service.js";
 import { leadListQuerySchema, updateLeadSchema } from "../../validation/lead.js";
 
@@ -45,6 +46,7 @@ router.patch("/:id", async (req: Request, res: Response, next: NextFunction) => 
   try {
     const validated = updateLeadSchema.parse(req.body);
     const lead = await projectService.updateLead(String(req.params.id), validated);
+    await logActivity({ userId: req.requester!.id, action: "updated", entity: "project", entityId: String(req.params.id), entityName: lead.organizationName || lead.clientName, changes: validated });
     res.status(200).json({ message: "Project updated", lead });
   }
   catch (err) {
@@ -65,7 +67,9 @@ router.patch("/:id", async (req: Request, res: Response, next: NextFunction) => 
 // DELETE /api/v1/projects/:id
 router.delete("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const lead = await projectService.getLeadById(String(req.params.id));
     await projectService.deleteLead(String(req.params.id));
+    await logActivity({ userId: req.requester!.id, action: "deleted", entity: "project", entityId: String(req.params.id), entityName: lead.organizationName || lead.clientName });
     res.status(200).json({ message: "Project deleted" });
   }
   catch (err) {
