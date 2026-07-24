@@ -5,6 +5,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   MONGODB_URI: z.string().url().default("mongodb://localhost:27017/freelancer-crm"),
   SESSION_SECRET: z.string().min(32).default("change_this_session_secret_in_production_min32"),
+  FRONTEND_URL: z.string().default("http://localhost:5173"),
 });
 
 try {
